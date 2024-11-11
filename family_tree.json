@@ -1,5 +1,5 @@
 {
-    "name": "root",
+    "name": "Root",
     "children": [
         {
             "name": "child1",
@@ -23,7 +23,12 @@
                 },
                 {
                     "name": "child2b",
-                    "children": []
+                    "children": [
+                        {
+                            "name": "child2b2",
+                            "children": []
+                        }
+                    ]
                 }
             ]
         }

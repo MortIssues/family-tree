@@ -1,42 +1,29 @@
 import json
+
 from node import Node
 
-class Tree:
-    def __init__(self):
-        self.root = None
-
-    def set_root(self, name):
-        self.root = Node(name=name)
-        return self.root
+class Tree(Node):
+    def __init__(self, name = None, parent = None):
+        super().__init__(name, parent)
 
     def save_json(self, file_path):
-        if not self.root:
-            print("No root node to save.")
-            return
-
         with open(file_path, 'w') as f:
-            json.dump(self.root.to_dict(), f, indent=4)
+            json.dump(self.to_dict(), f, indent=4)
         print(f"Family tree saved to {file_path}")
 
-    def load_json(self, file_path):
+    @classmethod
+    def load_json(cls, filename):
         try:
-            with open(file_path, 'r') as f:
+            with open(filename, 'r') as f:
                 data = json.load(f)
-            self.root = Node.from_dict(data)
-            print(f"Family tree loaded from {file_path}")
+            print(f"Family tree loaded from {filename}")
+            return cls.from_dict(data)
         except FileNotFoundError:
-            print(f"No file found at {file_path}, starting with an empty tree.")
+            print(f"No file found at {filename}, starting with an empty tree.")
+            return None
         except json.JSONDecodeError:
-            print(f"Error decoding JSON from {file_path}")
+            print(f"Error decoding JSON from {filename}")
+            return None
 
     def display_tree(self):
-        if not self.root:
-            print("No root node set.")
-        else:
-            print("\n".join(self.root.traverse_preorder_formatted()))
-
-    def traverse_preorder(self):
-        if not self.root:
-            print("No root node set.")
-            return []
-        return self.root.traverse_preorder()
+        print("\n".join(self.traverse_preorder_formatted()))

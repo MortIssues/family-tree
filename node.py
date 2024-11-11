@@ -10,11 +10,6 @@ class Node:
     def add_child(self, child_name):
         return Node(name=child_name, parent=self)
 
-    def display_tree(self, level = 0):
-        print(" " * (level * 3) + self.name)
-        for child in self.children:
-            child.display_tree(level + 1)
-
     def to_dict(self):
         return {
             "name": self.name,
@@ -46,3 +41,19 @@ class Node:
                 lines.extend(child.traverse_preorder_formatted(new_prefix, is_last_child))
 
         return lines
+
+    def find_node_by_name(self, name):
+        if self.name == name:
+            return self
+
+        for child in self.children:
+            found_node = child.find_node_by_name(name)
+            if found_node is not None:
+                return found_node
+
+        return None
+
+    def delete_node_by_name(self, name):
+        for i, child in enumerate(self.children):
+            if child.name == name:
+                del self.children[i]
