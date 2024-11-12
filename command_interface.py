@@ -19,9 +19,9 @@ class CommandInterface(cmd2.Cmd):
     tree_parser = create_subparsers.add_parser('tree', help="Create a new tree.")
     tree_parser.add_argument("name", type=str, help="The name of the root node of the tree.")
 
-    child_parser = create_subparsers.add_parser('child', help="Create a new child node.")
-    child_parser.add_argument("name", type=str, help="The name of the child node.")
-    child_parser.add_argument("parent", type=str, help="The name of the parent node.")
+    create_child_parser = create_subparsers.add_parser('child', help="Create a new child node.")
+    create_child_parser.add_argument("name", type=str, help="The name of the child node to be created.")
+    create_child_parser.add_argument("parent", type=str, help="The name of the parent node.")
 
     @with_argparser(create_parser)
     def do_create(self, args):
@@ -43,23 +43,35 @@ class CommandInterface(cmd2.Cmd):
                 return
             parent.add_child(args.name)
 
-    def do_remove_child(self, args):
+    remove_parser = argparse.ArgumentParser(prog="remove")
+    remove_subparsers = remove_parser.add_subparsers(dest="subcommand")
+
+    remove_child_parser = remove_subparsers.add_parser('child', help="Remove a child node.")
+    remove_child_parser.add_argument("name", type=str, help="The name of the child node to be removed.")
+
+    @with_argparser(remove_parser)
+    def do_remove(self, args):
         """
         Removes a child node from a node in the tree.
         Usage: remove child <name>
         Caution: Children of the removed child node will also be removed.
         """
 
-        self.tree.delete_node_by_name(args)
+        if args.subcommand == "child":
+            if self.tree.name == args.name:
+                self.tree = None
+            else:
+                self.tree.remove_node_by_name(args.name)
 
-    def do_show_tree(self, args):
+
+    def do_display(self, args):
         """
-        Displays the formatted tree structure.
+        Displays the current tree structure.
         """
 
         self.tree.display_tree()
 
-    def do_save_tree(self, args):
+    def do_save(self, args):
         """
         Saves a tree to a .json file.
         Usage: save tree <filename>
@@ -67,10 +79,10 @@ class CommandInterface(cmd2.Cmd):
 
         self.tree.save_json(args)
 
-    def do_load_tree(self, args):
+    def do_load(self, args):
         """
         Loads a tree from a .json file.
-        Usage: load tree <tree.json>
+        Usage: load <filename.json>
         Caution: Loading a new tree will result in the current one being discarded.
         """
 

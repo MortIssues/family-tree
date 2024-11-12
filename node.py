@@ -54,6 +54,10 @@ class Node:
         return None
 
     def delete_node_by_name(self, name):
-        for i, child in enumerate(self.children):
-            if child.name == name:
-                del self.children[i]
+        node = self.find_node_by_name(name)
+        node.parent.children.remove(node)
+
+        # for i, child in enumerate(self.children):
+        #     if child.name == name:
+        #         self.children.remove(name)
+        #         print(f"Removed {name}.")
