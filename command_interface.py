@@ -1,4 +1,3 @@
-import sys
 import argparse
 import cmd2
 from cmd2 import with_argparser
@@ -13,14 +12,6 @@ class CommandInterface(cmd2.Cmd):
     def __init__(self):
         super().__init__()
         self.tree = None
-        self.selected_node = None
-
-    def do_exit(self, args):
-        print("Exiting...")
-        sys.exit(0)
-
-    def do_quit(self, args):
-        return self.do_exit(args)
 
     create_parser = argparse.ArgumentParser(prog="create")
     create_subparsers = create_parser.add_subparsers(dest="subcommand")
@@ -48,9 +39,9 @@ class CommandInterface(cmd2.Cmd):
         elif args.subcommand == "child":
             parent = self.tree.find_node_by_name(args.parent)
             if not parent:
-                print(f"Error Occured - No node found called {parent}")
+                print(f"Error Occurred - No node found called {parent}")
                 return
-            parent.add_child(name=args.name)
+            parent.add_child(args.name)
 
     def do_remove_child(self, args):
         """
@@ -83,6 +74,5 @@ class CommandInterface(cmd2.Cmd):
         Caution: Loading a new tree will result in the current one being discarded.
         """
 
-        if self.tree is None:
-            self.tree = Tree()
-            self.tree.load_json(args)
+        self.tree = Tree()
+        self.tree = Tree.load_json(args)
