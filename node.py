@@ -1,63 +1,45 @@
 class Node:
-    def __init__(self, name, parent = None):
+    def __init__(self, name, gender=None, birthdate=None):
         self.name = name
-        self.parent = parent
+        self.gender = gender
+        self.birthdate = birthdate
+        self.parents = []
         self.children = []
+        self.spouses = []
+        self.previous_spouses = []
+        self.siblings = []
 
-        if parent:
-            parent.children.append(self)
+    def add_parent(self, parent):
+        self.parents.append(parent)
+        parent.children.append(self)
 
-    def add_child(self, child_name):
-        return Node(name=child_name, parent=self)
+    def add_child(self, child):
+        self.children.append(child)
+        child.parents.append(self)
+
+    def add_spouse(self, spouse):
+        self.spouses.append(spouse)
+        spouse.spouses.append(self)
+
+    def divorce_spouse(self, spouse):
+        if spouse in self.spouses:
+            self.spouses.remove(spouse)
+            self.previous_spouses.append(spouse)
+            spouse.spouses.remove(self)
+            spouse.previous_spouses.append(self)
+
+    def add_sibling(self, sibling):
+        self.siblings.append(sibling)
+        sibling.siblings.append(self)
 
     def to_dict(self):
         return {
             "name": self.name,
-            "children": [child.to_dict() for child in self.children]
+            "gender": self.gender,
+            "birthdate": self.birthdate,
+            "parents": [parent.name for parent in self.parents],
+            "children": [child.name for child in self.children],
+            "spouses": [spouse.name for spouse in self.spouses],
+            "previous_spouses": [spouse.name for spouse in self.previous_spouses],
+            "siblings": [sibling.name for sibling in self.siblings],
         }
-
-    @classmethod
-    def from_dict(cls, data, parent = None):
-        node = cls(name=data['name'], parent=parent)
-        for child_data in data.get('children', []):
-            cls.from_dict(child_data, parent=node)
-        return node
-
-    def traverse_preorder(self, formatted = False):
-        nodes = [self.name]
-        for child in self.children:
-            nodes.extend(child.traverse_preorder())
-        return nodes
-
-    def traverse_preorder_formatted(self, prefix = "", is_last = True):
-        connector = "┗━ " if is_last else "┣━ "
-        lines = [f"{prefix}{connector}{self.name}"]
-
-        if self.children:
-            new_prefix = prefix + ("   " if is_last else "┃  ")
-            child_count = len(self.children)
-            for i, child in enumerate(self.children):
-                is_last_child = (i == child_count - 1)
-                lines.extend(child.traverse_preorder_formatted(new_prefix, is_last_child))
-
-        return lines
-
-    def find_node_by_name(self, name):
-        if self.name == name:
-            return self
-
-        for child in self.children:
-            found_node = child.find_node_by_name(name)
-            if found_node is not None:
-                return found_node
-
-        return None
-
-    def delete_node_by_name(self, name):
-        node = self.find_node_by_name(name)
-        node.parent.children.remove(node)
-
-        # for i, child in enumerate(self.children):
-        #     if child.name == name:
-        #         self.children.remove(name)
-        #         print(f"Removed {name}.")

@@ -2,7 +2,7 @@ import argparse
 import cmd2
 from cmd2 import with_argparser
 
-from tree import Tree
+from graph import Graph
 
 
 class CommandInterface(cmd2.Cmd):
@@ -11,80 +11,94 @@ class CommandInterface(cmd2.Cmd):
 
     def __init__(self):
         super().__init__()
-        self.tree = None
+        self.graph = None
+        self.selected_node = None
 
-    create_parser = argparse.ArgumentParser(prog="create")
+    create_parser = argparse.ArgumentParser(prog="add")
     create_subparsers = create_parser.add_subparsers(dest="subcommand")
 
-    tree_parser = create_subparsers.add_parser('tree', help="Create a new tree.")
-    tree_parser.add_argument("name", type=str, help="The name of the root node of the tree.")
+    create_graph_parser = create_subparsers.add_parser('graph',
+                                                       help="Create a new graph.")
 
-    create_child_parser = create_subparsers.add_parser('child', help="Create a new child node.")
-    create_child_parser.add_argument("name", type=str, help="The name of the child node to be created.")
-    create_child_parser.add_argument("parent", type=str, help="The name of the parent node.")
+    create_node_parser = create_subparsers.add_parser('node',
+                                                      help="Create a new node.")
+    create_node_parser.add_argument("name", type=str,
+                                    help="The name of the node to be created.")
+    create_node_parser.add_argument("gender", action='store_true',
+                                    help="The gender of the node's identity.")
+    create_node_parser.add_argument("birthdate", action='store_true',
+                                    help="The birthdate of the node's identity.")
+
+    create_relation_parser = create_subparsers.add_parser('relation',
+                                                          help="Create a new relationship relative to the current selected node.")
+    create_relation_parser.add_argument("relation_type", type=str,
+                                        help="The relation type: Parent, child, sibling, spouse.")
+    create_relation_parser.add_argument("node", type=str,
+                                        help="The relation's identity.")
 
     @with_argparser(create_parser)
     def do_create(self, args):
-        """
-        Creates a new object based on subcommand.
-        Usage: create <subcommand>
-        Subcommands:
-            - Tree <name>
-            - Child <name> <parent>
-        Caution: Creating a new tree will result in the current one being discarded.
-        """
+        if args.subcommand == "graph":
+            self.graph = Graph()
+            print("New graph created.")
 
-        if args.subcommand == "tree":
-            self.tree = Tree(name=args.name)
-        elif args.subcommand == "child":
-            parent = self.tree.find_node_by_name(args.parent)
-            if not parent:
-                print(f"Error Occurred - No node found called {parent}")
-                return
-            parent.add_child(args.name)
+        elif args.subcommand == "node":
+            self.graph.add_node(args.name, args.gender if args.gender else None, args.birthdate if args.birthdate else None)
+            print("New node created.")
 
-    remove_parser = argparse.ArgumentParser(prog="remove")
-    remove_subparsers = remove_parser.add_subparsers(dest="subcommand")
+        elif args.subcommand == "relation":
+            target_node = self.graph.get_node(args.node)
+            if args.relation_type == 'parent':
+                self.selected_node.add_parent(target_node)
+                print(f"{args.node} is now a parent of {self.selected_node}.")
+            elif args.relation_type == 'child':
+                self.selected_node.add_child(target_node)
+                print(f"{args.node} is now a child of {self.selected_node}.")
+            elif args.relation_type == 'sibling':
+                self.selected_node.add_sibling(target_node)
+                print(f"{args.node} is now a sibling of {self.selected_node}.")
+            elif args.relation_type == 'spouse':
+                self.selected_node.add_spouse(target_node)
+                print(f"{args.node} is now a spouse of {self.selected_node}.")
 
-    remove_child_parser = remove_subparsers.add_parser('child', help="Remove a child node.")
-    remove_child_parser.add_argument("name", type=str, help="The name of the child node to be removed.")
+    divorce_parser = argparse.ArgumentParser(prog="divorce")
+    divorce_parser.add_argument("node", type=str,
+                             help="The name of the node currently a spouse of the selected node, to be divorced.")
 
-    @with_argparser(remove_parser)
-    def do_remove(self, args):
-        """
-        Removes a child node from a node in the tree.
-        Usage: remove child <name>
-        Caution: Children of the removed child node will also be removed.
-        """
+    @with_argparser(divorce_parser)
+    def do_divorce(self, args):
+        self.selected_node.divorce_spouse(self.graph.get_node(args.node))
 
-        if args.subcommand == "child":
-            if self.tree.name == args.name:
-                self.tree = None
-            else:
-                self.tree.remove_node_by_name(args.name)
+    load_parser = argparse.ArgumentParser(prog="load")
+    load_parser.add_argument("filename", type=str,
+                             help="The name of the file you wish to load a node graph from.")
 
-
-    def do_display(self, args):
-        """
-        Displays the current tree structure.
-        """
-
-        self.tree.display_tree()
-
-    def do_save(self, args):
-        """
-        Saves a tree to a .json file.
-        Usage: save tree <filename>
-        """
-
-        self.tree.save_json(args)
-
+    @with_argparser(load_parser)
     def do_load(self, args):
-        """
-        Loads a tree from a .json file.
-        Usage: load <filename.json>
-        Caution: Loading a new tree will result in the current one being discarded.
-        """
+        self.graph = Graph().load_from_json(args.filename)
+        print(f"Graph loaded from {args.filename}.")
 
-        self.tree = Tree()
-        self.tree = Tree.load_json(args)
+    save_parser = argparse.ArgumentParser(prog="save")
+    save_parser.add_argument("filename", type=str,
+                             help="The name of the file you wish to save the current node graph as.")
+
+    @with_argparser(save_parser)
+    def do_save(self, args):
+        self.graph.save_to_json(args.filename)
+        print(f"Graph saved to {args.filename}.")
+
+    select_parser = argparse.ArgumentParser(prog="select")
+    select_parser.add_argument("name", type=str,
+                             help="The name of the node you wish to select.")
+
+    @with_argparser(select_parser)
+    def do_select(self, args):
+        self.selected_node = self.graph.get_node(args.name)
+        print(f"{args.name} is now the selected node.")
+
+    def do_remove(self, args):
+        self.graph.remove_node(self.selected_node)
+        print(f"{args.name} has been removed.")
+
+    def do_info(self, args):
+        print(self.selected_node.to_dict())
