@@ -1,0 +1,74 @@
+{
+    "person_a": {
+        "name": "person_a",
+        "gender": null,
+        "birthdate": null,
+        "parents": [],
+        "children": [
+            "person_ab"
+        ],
+        "spouses": [
+            "person_b"
+        ],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "person_b": {
+        "name": "person_b",
+        "gender": null,
+        "birthdate": null,
+        "parents": [],
+        "children": [
+            "person_ab"
+        ],
+        "spouses": [
+            "person_a"
+        ],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "person_ab": {
+        "name": "person_ab",
+        "gender": null,
+        "birthdate": null,
+        "parents": [
+            "person_a",
+            "person_b"
+        ],
+        "children": [
+            "person_abc"
+        ],
+        "spouses": [
+            "person_c"
+        ],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "person_c": {
+        "name": "person_c",
+        "gender": null,
+        "birthdate": null,
+        "parents": [],
+        "children": [
+            "person_abc"
+        ],
+        "spouses": [
+            "person_ab"
+        ],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "person_abc": {
+        "name": "person_abc",
+        "gender": null,
+        "birthdate": null,
+        "parents": [
+            "person_c",
+            "person_ab"
+        ],
+        "children": [],
+        "spouses": [],
+        "previous_spouses": [],
+        "siblings": []
+    }
+}
