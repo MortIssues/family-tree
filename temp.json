@@ -1,0 +1,33 @@
+{
+    "person_a": {
+        "name": "person_a",
+        "gender": null,
+        "birthdate": "22-10-2000",
+        "parents": [],
+        "children": [
+            "person_c"
+        ],
+        "spouse": "person_b"
+    },
+    "person_b": {
+        "name": "person_b",
+        "gender": null,
+        "birthdate": "22-10-1995",
+        "parents": [],
+        "children": [
+            "person_c"
+        ],
+        "spouse": "person_a"
+    },
+    "person_c": {
+        "name": "person_c",
+        "gender": null,
+        "birthdate": "4-5-1997",
+        "parents": [
+            "person_a",
+            "person_b"
+        ],
+        "children": [],
+        "spouse": null
+    }
+}

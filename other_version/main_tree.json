@@ -1,0 +1,145 @@
+{
+    "Cornelia_Emmersohn": {
+        "name": "Cornelia_Emmersohn",
+        "gender": "female",
+        "birthdate": "1-1-1975",
+        "parents": [
+            "Herbet_Emmersohn",
+            "John_Emmersohn"
+        ],
+        "children": [
+            "Billy_Emmersohn",
+            "Susan_Emmersohn",
+            "Saffron_Emmersohn"
+        ],
+        "spouses": [
+            "Otto_Emmersohn"
+        ],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "Otto_Emmersohn": {
+        "name": "Otto_Emmersohn",
+        "gender": "male",
+        "birthdate": "1-1-1975",
+        "parents": [],
+        "children": [
+            "Billy_Emmersohn",
+            "Susan_Emmersohn"
+        ],
+        "spouses": [
+            "Cornelia_Emmersohn"
+        ],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "Billy_Emmersohn": {
+        "name": "Billy_Emmersohn",
+        "gender": "male",
+        "birthdate": "1-1-2016",
+        "parents": [
+            "Cornelia_Emmersohn",
+            "Otto_Emmersohn"
+        ],
+        "children": [],
+        "spouses": [],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "Susan_Emmersohn": {
+        "name": "Susan_Emmersohn",
+        "gender": "female",
+        "birthdate": "1-1-2012",
+        "parents": [
+            "Cornelia_Emmersohn",
+            "Otto_Emmersohn"
+        ],
+        "children": [],
+        "spouses": [],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "Saffron_Emmersohn": {
+        "name": "Saffron_Emmersohn",
+        "gender": "female",
+        "birthdate": "1-1-2000",
+        "parents": [
+            "Cornelia_Emmersohn",
+            "Otto_Emmersohn"
+        ],
+        "children": [],
+        "spouses": [
+            "Strognog_Strognog"
+        ],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "Strognog_Strognog": {
+        "name": "Strognog_Strognog",
+        "gender": null,
+        "birthdate": null,
+        "parents": [],
+        "children": [
+            "Strognog_Jr_Strognog"
+        ],
+        "spouses": [
+            "Saffron_Emmersohn"
+        ],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "Strognog_Jr_Strognog": {
+        "name": "Strognog_Jr_Strognog",
+        "gender": null,
+        "birthdate": null,
+        "parents": [
+            "Strognog_Strognog"
+        ],
+        "children": [],
+        "spouses": [],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "Herbet_Emmersohn": {
+        "name": "Herbet_Emmersohn",
+        "gender": "female",
+        "birthdate": "1-1-1950",
+        "parents": [],
+        "children": [
+            "Cornelia_Emmersohn"
+        ],
+        "spouses": [
+            "John_Emmersohn"
+        ],
+        "previous_spouses": [],
+        "siblings": []
+    },
+    "John_Emmersohn": {
+        "name": "John_Emmersohn",
+        "gender": "male",
+        "birthdate": "1-1-1950",
+        "parents": [],
+        "children": [
+            "Cornelia_Emmersohn"
+        ],
+        "spouses": [
+            "Herbet_Emmersohn"
+        ],
+        "previous_spouses": [
+            "Hellen_Graguflauge"
+        ],
+        "siblings": []
+    },
+    "Hellen_Graguflauge": {
+        "name": "Hellen_Graguflauge",
+        "gender": "female",
+        "birthdate": "1-1-1950",
+        "parents": [],
+        "children": [],
+        "spouses": [],
+        "previous_spouses": [
+            "John_Emmersohn"
+        ],
+        "siblings": []
+    }
+}

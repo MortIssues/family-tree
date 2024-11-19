@@ -1,27 +1,37 @@
-import argparse
 import cmd2
+import argparse
 from cmd2 import with_argparser
-import sys
 from graph import Graph
 
 
 class CommandInterface(cmd2.Cmd):
     intro = "CLI for the family tree system. Use 'help' or 'help <command>'."
-    prompt = "TREE> "
+    prompt = "GRAPH> "
 
-    def __init__(self, lock):
+    def __init__(self):
         super().__init__()
         self.graph = None
         self.selected_node = None
-        self.lock = lock
 
-    def do_quit(self, args = 0):
-        """Exits the program."""
 
-        sys.exit(args)
+    # Set up the select parser and its name argument.
+    select_parser = argparse.ArgumentParser(prog="select")
+    select_parser.add_argument("name", type=str,
+                               help="The name of the node you wish to select.")
+
+    @with_argparser(select_parser)
+    def do_select(self, args):
+        """
+        Selects a node.
+        Usage: select <name>
+        """
+
+        self.selected_node = self.graph.get_node(args.name)
+        print(f"{args.name} is now the selected node.")
+
 
     # Set up the create parser.
-    create_parser = argparse.ArgumentParser(prog="add")
+    create_parser = argparse.ArgumentParser(prog="create")
     create_subparsers = create_parser.add_subparsers(dest="subcommand")
 
     # Subcommand - Graph
@@ -38,14 +48,6 @@ class CommandInterface(cmd2.Cmd):
     create_node_parser.add_argument("--birthdate", type=str,
                                     help="Optionally, the birthdate of the node's identity.")
 
-    # Subcommand - Relation and its arguments: relation_type, node
-    create_relation_parser = create_subparsers.add_parser('relation',
-                                                          help="Create a new relationship relative to the current selected node.")
-    create_relation_parser.add_argument("relation_type", type=str,
-                                        help="The relation type: Parent, child, sibling, spouse.")
-    create_relation_parser.add_argument("node", type=str,
-                                        help="The relation's identity.")
-
     @with_argparser(create_parser)
     def do_create(self, args):
         """
@@ -53,58 +55,67 @@ class CommandInterface(cmd2.Cmd):
         Usage: create <subcommand>
         Subcommands:
             graph
-            node <name>
-                Optionally: --gender <gender> --birthdate <birthdate>
-            relation <relation_type> <node>
+            node <name> Optionally: --gender <gender> --birthdate <birthdate>
         Warnings: Creating a new graph will discard the one currently being worked on.
         """
 
-        with self.lock:
-            # Create a new blank graph.
-            if args.subcommand == "graph":
-                self.graph = Graph()
-                print("New graph created.")
+        # Create a new blank graph.
+        if args.subcommand == "graph":
+            self.graph = Graph()
+            print("New graph created.")
 
-            # Create a new node.
-            elif args.subcommand == "node":
-                print(args.gender, args.birthdate)
-                self.selected_node = self.graph.add_node(args.name,
-                                                         args.gender if args.gender else None,
-                                                         args.birthdate if args.birthdate else None)
-                print("New node created.")
+        # Create a new node.
+        elif args.subcommand == "node":
+            self.selected_node = self.graph.add_node(args.name,
+                                                     args.gender if args.gender else None,
+                                                     args.birthdate if args.birthdate else None)
+            print(f"New node {args.name} created.")
 
-            # Establish a specified relationship between the selected node and a specified node.
-            elif args.subcommand == "relation":
-                target_node = self.graph.get_node(args.node)
-                if args.relation_type == 'parent':
-                    self.selected_node.add_parent(target_node)
-                    print(f"{args.node} is now a parent of {self.selected_node}.")
-                elif args.relation_type == 'child':
-                    self.selected_node.add_child(target_node)
-                    print(f"{args.node} is now a child of {self.selected_node}.")
-                elif args.relation_type == 'sibling':
-                    self.selected_node.add_sibling(target_node)
-                    print(f"{args.node} is now a sibling of {self.selected_node}.")
-                elif args.relation_type == 'spouse':
-                    self.selected_node.add_spouse(target_node)
-                    print(f"{args.node} is now a spouse of {self.selected_node}.")
 
-    # Set up the divorce parser and its node argument.
-    # This could be achieved without the argparser but I felt it was beneficial for the sake of consistency and also clarity when it comes to the help command.
-    divorce_parser = argparse.ArgumentParser(prog="divorce")
-    divorce_parser.add_argument("node", type=str,
-                             help="The name of the node currently a spouse of the selected node, to be divorced.")
+    # Set up the set parser
+    set_parser = argparse.ArgumentParser(prog="set")
+    set_subparsers = set_parser.add_subparsers(dest="subcommand")
 
-    @with_argparser(divorce_parser)
-    def do_divorce(self, args):
-        """
-        Divorces a node from the current selected node.
-        Usage: divorce <node>
-        Warnings: The node to be divorced must be in the spouse of the selected node.
-        """
+    # Subcommand - relation
+    set_relation_parser = set_subparsers.add_parser('relation',
+                                                    help="Create a new relationship relative to the current selected node.")
+    set_relation_parser.add_argument("relation_type", type=str, choices=['child', 'spouse', 'parents'],
+                                     help="The relation type: parent, child, spouse, parents.")
+    set_relation_parser.add_argument("nodes", type=str, nargs='+',
+                                     help="The relation's identity. For 'parents', specify two nodes.")
 
-        with self.lock:
-            self.selected_node.divorce_spouse(self.graph.get_node(args.node))
+    #Subcommand - info
+    set_info_subcommand = set_subparsers.add_parser("info", help="Set an attribute of the selected node.")
+    set_info_subcommand.add_argument("attribute", type=str, help="Attribute to modify.")
+    set_info_subcommand.add_argument("value", type=str, help="New value for the attribute.")
+
+    def do_set(self, args):
+        if args.subcommand == "relation":
+            if args.relation_type == 'parents':
+                parent1 = self.graph.get_node(args.nodes[0])
+                parent2 = self.graph.get_node(args.nodes[1])
+                self.selected_node.add_parents(parent1, parent2)
+                print(f"{args.nodes[0]} and {args.nodes[1]} are now parents of {self.selected_node}.")
+            else:
+                target_node = self.graph.get_node(args.nodes[0])
+
+            if args.relation_type == 'child':
+                self.selected_node.add_child(target_node)
+                print(f"{args.node} is now a child of {self.selected_node}.")
+            elif args.relation_type == 'spouse':
+                self.selected_node.spouse = target_node
+                print(f"{args.node} is now a spouse of {self.selected_node}.")
+
+        elif args.subcommand == "info":
+            attribute = args.attribute.lower()
+            value = args.value
+
+            if hasattr(self.selected_node, attribute):
+                setattr(self.selected_node, attribute, value)
+                print(f"Updated {self.selected_node.name} {attribute} to {value}.")
+            else:
+                print(f"Invalid attribute: {attribute}.")
+
 
     # Set up the load parser and its filename argument.
     load_parser = argparse.ArgumentParser(prog="load")
@@ -121,8 +132,9 @@ class CommandInterface(cmd2.Cmd):
             Loading a new graph will discard the one currently being worked on.
         """
 
-        with self.lock:
-            self.graph = Graph().load_from_json(args.filename)
+        self.graph = Graph().load_from_json(args.filename)
+        print(self.graph.nodes)
+
 
     # Set up the save parser and its filename argument.
     save_parser = argparse.ArgumentParser(prog="save")
@@ -137,44 +149,101 @@ class CommandInterface(cmd2.Cmd):
         Warnings: filename must be of type JSON.
         """
 
-        with self.lock:
-            self.graph.save_to_json(args.filename)
+        self.graph.save_to_json(args.filename)
 
-    # Set up the select parser and its name argument.
-    select_parser = argparse.ArgumentParser(prog="select")
-    select_parser.add_argument("name", type=str,
-                             help="The name of the node you wish to select.")
 
-    @with_argparser(select_parser)
-    def do_select(self, args):
-        """
-        Selects a node.
-        Usage: select <name>
-        """
+    info_parser = argparse.ArgumentParser(prog="info")
+    info_subparser = info_parser.add_subparsers(dest="subcommand",
+                                                help="Subcommands for info.")
 
-        with self.lock:
-            self.selected_node = self.graph.get_node(args.name)
-            print(f"{args.name} is now the selected node.")
+    # Subcommand - All
+    info_all_subcommand = info_subparser.add_parser("all",
+                                                    help="Retrieve all information about the selected node.")
 
-    def do_remove(self, args):
-        """
-        Removes a node.
-        Usage: remove <name>
-        Warnings: This cannot be undone.
-        """
+    # Subcommand - Relation and its relation_type argument and optional modifiers flag.
+    info_relation_subcommand = info_subparser.add_parser("relation",
+                                                         help="Find a relation relative to the selected node.")
+    info_relation_subcommand.add_argument("relation_type", type=str,
+                                          help="Type of relation.")
 
-        with self.lock:
-            self.graph.remove_node(self.selected_node)
-            print(f"{args.name} has been removed.")
+    # Subcommand - Birthdays and its optional sorted flag.
+    info_birthdays_subcommand = info_subparser.add_parser("birthdays",
+                                                    help="Retrieve all birthdays organised by date order.")
+    info_birthdays_subcommand.add_argument("--sorted", action="store_true",
+                                    help="Optionally, show birthdays sorted and merged.")
 
+    @with_argparser(info_parser)
     def do_info(self, args):
         """
-        Outputs information about the selected node.
-        Usage: info
-        Notes: this still needs some work as I would like to be able to retrieve certain data from a node including
-        relations. For example typing in 'info uncle' should return the selected nodes uncle. I would like to try
-        implement a modular way of doing this so the term 'great' can be stacked to shift layers. For example 'great
-        great grandmother' should return a list of the selected nodes great great grandmothers.
+        Retrieve or modify information about the selected node.
+        Usage: info <subcommand>
+        Subcommands:
+            relation <relation_type> --<modifiers>
+            all
         """
 
-        print(self.selected_node.to_dict())
+        attribute_list = ["children", "spouse", "parents"]
+
+        if args.subcommand == "relation" or args.subcommand == "all":
+            relation_type = args.relation_type.lower()
+
+            if relation_type in attribute_list:
+                relatives = getattr(self.selected_node, relation_type)
+                print(f"The {relation_type} of {self.selected_node.name} are: {[node.name for node in relatives]}")
+
+            elif args.subcommand == "all":
+                for attribute in attribute_list:
+                    relatives = getattr(self.selected_node, attribute)
+                    print(f"The {attribute} of {self.selected_node.name} are: {[node.name for node in relatives]}")
+
+            elif relation_type == "siblings" or args.subcommand == "all":
+                siblings = []
+                for parent in self.selected_node.parents:
+                    siblings.extend(parent.children)
+                print(f"The {relation_type} of {self.selected_node.name} are: {siblings}")
+
+            elif relation_type == "cousins" or args.subcommand == "all":
+                cousins = []
+                for parent in self.selected_node.parents:
+                    if not parent.parents:
+                        continue
+                    for grandparent in parent.parents:
+                        if not grandparent.children:
+                            continue
+                        for pibling in grandparent.children:
+                            if pibling == parent:
+                                continue
+                            for child in pibling.children:
+                                if child.name not in cousins:
+                                    cousins.append(child.name)
+
+        elif args.subcommand == "birthdays" and args.sorted:
+            months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+            birthdays = {}
+
+            for node in self.graph.nodes.values():
+                if node.birthdate:
+                    day, month, year = node.birthdate.split('-')
+                    key = f"{day}-{month}"
+
+                    if key not in birthdays:
+                        birthdays[key] = []
+
+                    birthdays[key].append(node.name)
+
+            sorted_birthdays = sorted(birthdays.items(), key=lambda x: int(x[0].split('-')[1]) * 31 + int(x[0].split('-')[0]))
+            for date, names in sorted_birthdays:
+                f_day = date.split("-")[0]
+                f_day += "st" if f_day[-1] == "1" else "nd" if f_day[-1] == "2" else "rd" if f_day[-1] == "3" else "th"
+                f_month = months[int(date.split("-")[1]) - 1]
+                print(f"{' and '.join(names)}: {f_day} {f_month}")
+
+        elif args.subcommand == "birthdays":
+            birthdays = []
+
+            for node in self.graph.nodes.values():
+                if node.birthdate:
+                    birthdays.append([node.name, node.birthdate])
+
+            for birthday in birthdays:
+                print(f"{birthday[0]}: {birthday[1]}")
