@@ -18,12 +18,15 @@ class Graph:
         Returns:
             node (Node): The created node.
         """
-
+        # Check if node already exists.
         if name not in self.nodes:
+            # Add the node if it doesn't
             self.nodes[name] = Node(name, gender, birthdate)
         else:
             print(f"Person {name} already exists.")
         print(self.nodes)
+
+        # Return it so it can be accessed via variable.
         return self.nodes[name]
 
     def get_node(self, name):
@@ -46,7 +49,7 @@ class Graph:
         Args:
             name (str): The name of the node to be removed.
         """
-
+        # Find everywhere the node could be and remove reference to it before deleting the node itself.
         if name in self.nodes:
             node = self.nodes[name]
             for parent in node.parents:
@@ -65,8 +68,7 @@ class Graph:
         Returns:
             Dictionary containing data for all nodes.
         """
-
-        return {name: person.to_dict() for name, person in self.nodes.items()}
+        return {name: node.to_dict() for name, node in self.nodes.items()}
 
     @classmethod
     def from_dict(cls, data):
@@ -79,23 +81,21 @@ class Graph:
         Returns:
             graph (Graph): A new Graph object populated with nodes and their relationships as defined in data.
         """
-
         graph = cls()
         temp_nodes = {name: Node(name) for name in data.keys()}
 
+        # Loop through nodes and set the information for each of the nodes.
         for name, details in data.items():
             node = temp_nodes[name]
             node.gender = details.get("gender")
             node.birthdate = details.get("birthdate")
-
-        for name, details in data.items():
-            node = temp_nodes[name]
             node.spouse = temp_nodes.get(details.get("spouse"))
             for parent_name in details.get("parents", []):
                 node.parents.append(temp_nodes[parent_name])
             for child_name in details.get("children", []):
                 node.children.append(temp_nodes[child_name])
 
+        # Return the graph object.
         graph.nodes = temp_nodes
         return graph
 
