@@ -4,21 +4,21 @@ from datetime import datetime
 
 # Check for a graph.
 def requires_graph(func):
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args):
         if not self.graph:
             print("This command requires a graph. Either load one with the 'load' command or make one with the 'create graph' command.")
             return
-        return func(self, *args, **kwargs)
+        return func(self, *args)
     return wrapper
 
 
 #Check for a selected node.
 def requires_selected_node(func):
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args):
         if not self.selected_node:
             print("This command requires a node to be selected. Please use the 'select' command.")
             return
-        return func(self, *args, **kwargs)
+        return func(self, *args)
     return wrapper
 
 
@@ -141,3 +141,23 @@ def info_average_age(graph, total_people):
     # Calculate the average and output.
     average_age = total_age / total_people
     print(f"Average age: {average_age}")
+
+def info_immediate_family(node):
+    if node.children:
+
+        print(f"Children of {node.name}: ", ", ".join([node.name for node in node.children]))
+
+    if node.parents:
+        print(f"Parents of {node.name}: ", ", ".join([node.name for node in node.parents]))
+
+        siblings = []
+        siblings.extend(node.parents[0].children)
+        siblings.extend(node.parents[1].children)
+
+        print(f"Siblings of {node.name}: ", ", ".join([node.name for node in siblings]))
+
+def info_all_related(node):
+    if related := node.get_all_related():
+        print(f"Extended family of {node.name}: ", ", ".join([node.name for node in related]))
+    else:
+        print(f"No family members found for {node.name}.")

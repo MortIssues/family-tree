@@ -1,3 +1,6 @@
+from ci_helper_functions import requires_selected_node
+
+
 class Node:
     def __init__(self, name, gender=None, birthdate=None):
         self.name = name
@@ -38,3 +41,26 @@ class Node:
             "children": [child.name for child in self.children],
             "spouse": self.spouse.name if self.spouse else None
         }
+
+    def get_all_related(self):
+        related_members = []
+
+        def collect_related(node):
+            if node not in related_members:
+                if node != self:
+                    related_members.append(node)
+
+                if self.parents:
+                    for parent in self.parents:
+                        collect_related(parent)
+
+                if self.children:
+                    for child in self.children:
+                        collect_related(child)
+
+                if self.spouse:
+                    collect_related(self.spouse)
+
+        collect_related(self)
+
+        return related_members

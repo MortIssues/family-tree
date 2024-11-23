@@ -13,11 +13,11 @@ class CommandInterface(cmd2.Cmd):
         self.graph = None
         self.selected_node = None
 
+
     select_parser = argparse.ArgumentParser(prog="select")
     select_parser.add_argument("name", type=str,
-                               help="The name of the node you wish to select.")
+                               help="Name of the node to be selected.")
 
-    @ci.requires_graph
     @with_argparser(select_parser)
     def do_select(self, args):
         """
@@ -70,8 +70,6 @@ class CommandInterface(cmd2.Cmd):
                                                      args.birthdate if args.birthdate else None)
             print(f"New node {args.name} created.")
 
-    @ci.requires_graph
-    @ci.requires_selected_node
     def do_remove(self, args):
         """
         Remove the selected node.
@@ -100,8 +98,6 @@ class CommandInterface(cmd2.Cmd):
     set_info_subcommand.add_argument("attribute", type=str, help="Attribute to modify.")
     set_info_subcommand.add_argument("value", type=str, help="New value for the attribute.")
 
-    @ci.requires_graph
-    @ci.requires_selected_node
     def do_set(self, args):
         # Execute relation subcommand.
         if args.subcommand == "relation":
@@ -150,7 +146,6 @@ class CommandInterface(cmd2.Cmd):
     save_parser.add_argument("filename", type=str,
                              help="The name of the file you wish to save the current node graph as.")
 
-    @ci.requires_graph
     @with_argparser(save_parser)
     def do_save(self, args):
         """
@@ -166,10 +161,6 @@ class CommandInterface(cmd2.Cmd):
     info_parser = argparse.ArgumentParser(prog="info")
     info_subparser = info_parser.add_subparsers(dest="subcommand",
                                                 help="Subcommands for info.")
-
-    # Subcommand - All.
-    info_all_subcommand = info_subparser.add_parser("all",
-                                                    help="Retrieve all information about the selected node.")
 
     # Subcommand - Relation, and its relation_type argument and optional modifiers flag.
     info_relation_subcommand = info_subparser.add_parser("relation",
@@ -189,8 +180,14 @@ class CommandInterface(cmd2.Cmd):
     info_average_subcommand.add_argument("average_type", type=str,
                                          help="Type of average to calculate: children or age.")
 
-    @ci.requires_graph
-    @ci.requires_selected_node
+    # Subcommand - Immediate family
+    info_immediate_subcommand = info_subparser.add_parser("immediate-family",
+                                                        help="Outputs the immmediate family of the selected node.")
+
+    # Subcommand - Extended family
+    info_extended_subcommand = info_subparser.add_parser("extended-family",
+                                                        help="Outputs the extended family of the selected node.")
+
     @with_argparser(info_parser)
     def do_info(self, args):
         """
@@ -205,7 +202,7 @@ class CommandInterface(cmd2.Cmd):
         attribute_list = ["children", "spouse", "parents"]
 
         # Execute relation subcommand.
-        if args.subcommand == "relation" or args.subcommand == "all":
+        if args.subcommand == "relation":
             relation_type = args.relation_type.lower()
 
             # If the relation type is an explicit one (i.e. in the standard list of attributes.
@@ -213,21 +210,15 @@ class CommandInterface(cmd2.Cmd):
                 relatives = getattr(self.selected_node, relation_type)
                 print(f"The {relation_type} of {self.selected_node.name} are: {[node.name for node in relatives]}")
 
-            # If the user wanted all info then just output everything.
-            elif args.subcommand == "all":
-                for attribute in attribute_list:
-                    relatives = getattr(self.selected_node, attribute)
-                    print(f"The {attribute} of {self.selected_node.name} are: {[node.name for node in relatives]}")
-
             # Less explicit relations are found here, starting with siblings.
-            elif relation_type == "siblings" or args.subcommand == "all":
+            elif relation_type == "siblings":
                 siblings = []
                 for parent in self.selected_node.parents:
                     siblings.extend(parent.children)
                 print(f"The {relation_type} of {self.selected_node.name} are: {siblings}")
 
             # Cousins are found.
-            elif relation_type == "cousins" or args.subcommand == "all":
+            elif relation_type == "cousins":
                 ci.info_cousins(self.selected_node)
 
         # Execute birthdays subcommand with the sorted option as true.
@@ -250,3 +241,11 @@ class CommandInterface(cmd2.Cmd):
             # Average age option.
             elif average_type == "age":
                 ci.info_average_age(self.graph, total_people)
+
+        elif args.subcommand == "immediate-family":
+            ci.info_immediate_family(self.selected_node)
+
+        elif args.subcommand == "extended-family":
+            ci.info_all_related(self.selected_node)
+
+
